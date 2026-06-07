@@ -794,7 +794,6 @@ maziwasyncapi/
 │   ├── admin.py
 │   └── ...
 │
-├── accounts/
 ├── cooperative/
 ├── collector/
 ├── farmer/
@@ -1906,3 +1905,479 @@ View My Collections
 Generate Dashboard Analytics
 ```
 
+
+# Farmer Module
+
+The Farmer module allows farmers to:
+
+* View milk collection history
+* Submit feedback and complaints
+* Manage their feedback records
+* View dashboard analytics and earnings summaries
+
+---
+
+# Learning Objectives
+
+After completing this section, students should understand:
+
+* Model Serializers
+* ListAPIView
+* ModelViewSet
+* CRUD Operations
+* QuerySet Filtering
+* Aggregations
+* Dashboard Analytics
+* Role-Based Access Control
+
+---
+
+# Lesson 1: Viewing Milk Collections
+
+Before a farmer can view milk collection records, Django REST Framework needs a serializer to convert database objects into JSON.
+
+---
+
+# Milk Collection Serializer
+
+```python
+class MilkCollectionSerializer(serializers.ModelSerializer):
+    porter_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MilkCollection
+        fields = [
+            'id',
+            'liters',
+            'session',
+            'price_per_liter',
+            'total_amount',
+            'collection_date',
+            'porter_name',
+        ]
+
+    def get_porter_name(self, obj):
+        return f"{obj.porter.first_name} {obj.porter.last_name}"
+```
+
+---
+
+## Why Do We Need a Serializer?
+
+Converts:
+
+```python
+MilkCollection Object
+```
+
+into:
+
+```json
+{
+    "id": 1,
+    "liters": 55,
+    "session": "EVENING",
+    "price_per_liter": 50,
+    "total_amount": 2750,
+    "collection_date": "2025-07-10",
+    "porter_name": "Peter Mwangi"
+}
+```
+
+---
+
+## What Students Learn
+
+* ModelSerializer
+* SerializerMethodField
+* JSON Serialization
+* Related Model Data
+
+---
+
+# Lesson 2: View My Milk Collections
+
+This endpoint allows a farmer to view all milk collection records associated with their account.
+
+---
+
+## View Implementation
+
+```python
+class FarmerCollectionsView(ListAPIView):
+    serializer_class = MilkCollectionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+
+        farmer = self.request.user.farmer_profile
+
+        collections = (
+            MilkCollection.objects
+            .filter(farmer=farmer)
+            .select_related('porter')
+            .order_by('-created_at')
+        )
+
+        return collections
+```
+
+---
+
+## How the Logic Works
+
+### Get Logged-in Farmer
+
+```python
+farmer = self.request.user.farmer_profile
+```
+
+The farmer is identified using the JWT token.
+
+---
+
+### Retrieve Collections
+
+```python
+MilkCollection.objects.filter(
+    farmer=farmer
+)
+```
+
+This ensures a farmer can only view their own collection records.
+
+---
+
+### Optimize Queries
+
+```python
+.select_related('porter')
+```
+
+Loads porter information efficiently.
+
+---
+
+## Testing
+
+### Endpoint
+
+```http
+GET /api/farmers/collections/
+```
+
+### Headers
+
+```http
+Authorization: Bearer <access_token>
+```
+
+### Example Response
+
+```json
+[
+    {
+        "id": 1,
+        "liters": 55,
+        "session": "EVENING",
+        "price_per_liter": 50,
+        "total_amount": 2750,
+        "collection_date": "2025-07-10",
+        "porter_name": "Peter Mwangi"
+    }
+]
+```
+
+---
+
+## What Students Learn
+
+* ListAPIView
+* QuerySets
+* Filtering
+* select_related()
+* Serializer Integration
+
+---
+
+# Lesson 3: Feedback Serializer
+
+Before creating feedback records, we need a serializer.
+
+---
+
+## FeedbackSerializer
+
+```python
+class FeedbackSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Feedback
+
+        fields = [
+            'id',
+            'title',
+            'description',
+            'status',
+            'created_at',
+            'updated_at',
+        ]
+
+        read_only_fields = [
+            'status',
+            'created_at',
+            'updated_at',
+        ]
+```
+
+---
+
+## Why Read-Only Fields?
+
+Farmers should not manually set:
+
+```python
+status
+created_at
+updated_at
+```
+
+These values are managed by the system.
+
+---
+
+## What Students Learn
+
+* ModelSerializer
+* read_only_fields
+* Data Validation
+
+---
+
+# Lesson 4: Feedback CRUD Operations
+
+Farmers can create, view, update, and delete their own feedback records.
+
+This lesson introduces ModelViewSet.
+
+---
+
+## View Implementation
+
+```python
+class FeedbackViewSet(ModelViewSet):
+    serializer_class = FeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+
+        try:
+            farmer = self.request.user.farmer_profile
+        except:
+            raise PermissionDenied(
+                "Only farmers can access this endpoint."
+            )
+
+        return Feedback.objects.filter(
+            farmer=farmer
+        ).order_by('-created_at')
+
+    def perform_create(self, serializer):
+
+        farmer = self.request.user.farmer_profile
+
+        serializer.save(
+            farmer=farmer
+        )
+```
+
+---
+
+## Available Operations
+
+| Method  | Action            |
+| ------- | ----------------- |
+| GET     | List Feedback     |
+| POST    | Create Feedback   |
+| GET /id | Retrieve Feedback |
+| PUT     | Update Feedback   |
+| PATCH   | Partial Update    |
+| DELETE  | Delete Feedback   |
+
+---
+
+## Create Feedback
+
+### Endpoint
+
+```http
+POST /api/farmers/feedback/
+```
+
+### Body
+
+```json
+{
+    "title": "Late Collection",
+    "description": "Milk was collected later than expected."
+}
+```
+
+### Response
+
+```json
+{
+    "id": 1,
+    "title": "Late Collection",
+    "description": "Milk was collected later than expected.",
+    "status": "PENDING"
+}
+```
+
+---
+
+## What Students Learn
+
+* ModelViewSet
+* CRUD Operations
+* perform_create()
+* Ownership-Based Data Access
+
+---
+
+# Lesson 5: Farmer Dashboard
+
+After viewing collections and submitting feedback, farmers can view performance and earnings statistics.
+
+---
+
+## View Implementation
+
+```python
+class FarmerDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        farmer = request.user.farmer_profile
+
+        collections = MilkCollection.objects.filter(
+            farmer=farmer
+        )
+
+        total_collections = collections.count()
+
+        total_liters = collections.aggregate(
+            total=Sum('liters')
+        )['total'] or 0
+
+        total_amount = collections.aggregate(
+            total=Sum('total_amount')
+        )['total'] or 0
+
+        today_collection = collections.filter(
+            collection_date=date.today()
+        ).aggregate(
+            total=Sum('liters')
+        )['total'] or 0
+
+        current_month = timezone.now().month
+
+        monthly_liters = collections.filter(
+            collection_date__month=current_month
+        ).aggregate(
+            total=Sum('liters')
+        )['total'] or 0
+
+        monthly_earnings = collections.filter(
+            collection_date__month=current_month
+        ).aggregate(
+            total=Sum('total_amount')
+        )['total'] or 0
+
+        return Response({
+            "total_collections": total_collections,
+            "total_liters": total_liters,
+            "total_amount": total_amount,
+            "today_collection": today_collection,
+            "monthly_earnings": monthly_earnings,
+            "monthly_liters": monthly_liters
+        })
+```
+
+---
+
+## Testing
+
+### Endpoint
+
+```http
+GET /api/farmers/dashboard/
+```
+
+### Headers
+
+```http
+Authorization: Bearer <access_token>
+```
+
+### Example Response
+
+```json
+{
+    "total_collections": 45,
+    "total_liters": 2250,
+    "total_amount": 112500,
+    "today_collection": 55,
+    "monthly_earnings": 35000,
+    "monthly_liters": 700
+}
+```
+
+---
+
+## What Students Learn
+
+* APIView
+* Aggregations
+* Sum()
+* count()
+* Dashboard Design
+* Business Analytics
+
+---
+
+# Farmer Workflow Summary
+
+```text
+Login
+   ↓
+Serialize Milk Collection Data
+   ↓
+View My Collections
+   ↓
+Serialize Feedback Data
+   ↓
+Create Feedback
+   ↓
+Update Feedback
+   ↓
+Delete Feedback
+   ↓
+View Dashboard Analytics
+```
+
+
+Admin Login
+      ↓
+Manage Farmers
+      ↓
+Manage Porters
+      ↓
+Manage Milk Collections
+      ↓
+Manage Notices
+      ↓
+Farmers & Porters View Notices
+      ↓
+Admin Dashboard Analytics
