@@ -2381,3 +2381,20 @@ Manage Notices
 Farmers & Porters View Notices
       ↓
 Admin Dashboard Analytics
+
+
+
+
+Admin Login
+      ↓
+Manage Farmers
+      ↓
+Manage Porters
+      ↓
+Manage Milk Collections
+      ↓
+Manage Notices
+      ↓
+Farmers & Porters View Notices
+      ↓
+Admin Dashboard Analytics
