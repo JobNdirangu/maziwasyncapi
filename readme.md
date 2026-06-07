@@ -1529,285 +1529,43 @@ Expected Result
 
 The refresh token becomes invalid and cannot be reused.
 
+# Collector (Porter) Module
 
-# Add Milk Collection
+The Collector module allows milk collectors (porters) to record milk deliveries from farmers, view their collection history, and monitor daily collection statistics.
 
-This endpoint allows an authenticated porter to record milk supplied by a farmer.
+---
+
+# Learning Objectives
+
+After completing this section, students should understand:
+
+* JWT Authentication
+* Function-Based Views
+* Class-Based Views
+* Django ORM
+* QuerySets
+* Serializers
+* Aggregations
+* Dashboard Analytics
+* Role-Based Access Control
+
+---
+
+# Lesson 1: Add Milk Collection
+
+A porter records milk delivered by a farmer.
 
 The porter is identified automatically using the JWT access token.
-
-# Milk Collection Serializer
-
-Before returning milk collection records to the API client, Django REST Framework needs a serializer to convert model objects into JSON.
-
-The `MilkCollectionSerializer` controls which fields are exposed to the frontend.
-
----
-
-## Serializer Implementation
-
-```python
-from rest_framework import serializers
-from core.models import MilkCollection
-
-class MilkCollectionSerializer(serializers.ModelSerializer):
-    farmer_name = serializers.SerializerMethodField()
-
-    farmer_code = serializers.CharField(
-        source='farmer.membership_number',
-        read_only=True
-    )
-
-    class Meta:
-        model = MilkCollection
-        fields = [
-            'id',
-            'farmer_code',
-            'farmer_name',
-            'liters',
-            'session',
-            'total_amount',
-            'collection_date',
-        ]
-
-    def get_farmer_name(self, obj):
-        return f"{obj.farmer.first_name} {obj.farmer.last_name}"
-```
-
----
-
-## Why Do We Need a Serializer?
-
-Database objects cannot be sent directly as JSON responses.
-
-A serializer converts:
-
-```python
-MilkCollection Object
-```
-
-into:
-
-```json
-{
-    "id": 1,
-    "farmer_code": "FRM001",
-    "farmer_name": "John Kamau",
-    "liters": 55,
-    "session": "EVENING",
-    "total_amount": 2750,
-    "collection_date": "2025-07-10"
-}
-```
-
----
-
-## Understanding Each Field
-
-### ID
-
-```python
-'id'
-```
-
-The unique collection record identifier.
-
-Example:
-
-```json
-{
-    "id": 1
-}
-```
-
----
-
-### Farmer Code
-
-```python
-farmer_code = serializers.CharField(
-    source='farmer.membership_number',
-    read_only=True
-)
-```
-
-Instead of returning the farmer's database ID, the serializer returns the membership number.
-
-Example:
-
-```json
-{
-    "farmer_code": "FRM001"
-}
-```
-
-The value comes from:
-
-```python
-farmer.membership_number
-```
-
----
-
-### Farmer Name
-
-```python
-farmer_name = serializers.SerializerMethodField()
-```
-
-This field does not exist in the database.
-
-It is generated dynamically.
-
-```python
-def get_farmer_name(self, obj):
-    return f"{obj.farmer.first_name} {obj.farmer.last_name}"
-```
-
-Example:
-
-```json
-{
-    "farmer_name": "John Kamau"
-}
-```
-
----
-
-### Liters
-
-```python
-'liters'
-```
-
-The quantity of milk supplied.
-
-Example:
-
-```json
-{
-    "liters": 55
-}
-```
-
----
-
-### Session
-
-```python
-'session'
-```
-
-Indicates whether the milk was collected during:
-
-```text
-MORNING
-```
-
-or
-
-```text
-EVENING
-```
-
-Example:
-
-```json
-{
-    "session": "EVENING"
-}
-```
-
----
-
-### Total Amount
-
-```python
-'total_amount'
-```
-
-The monetary value of the collected milk.
-
-Example:
-
-```json
-{
-    "total_amount": 2750
-}
-```
-
----
-
-### Collection Date
-
-```python
-'collection_date'
-```
-
-The date the milk was collected.
-
-Example:
-
-```json
-{
-    "collection_date": "2025-07-10"
-}
-```
-
----
-
-## Example Serialization Process
-
-### Database Record
-
-```text
-MilkCollection
-    id = 1
-    farmer = John Kamau
-    liters = 55
-    session = EVENING
-    total_amount = 2750
-```
-
-### Serialized Output
-
-```json
-{
-    "id": 1,
-    "farmer_code": "FRM001",
-    "farmer_name": "John Kamau",
-    "liters": 55,
-    "session": "EVENING",
-    "total_amount": 2750,
-    "collection_date": "2025-07-10"
-}
-```
-
-## Learning Outcome
-
-After completing this example, students should understand:
-
-* What a Serializer is
-* Why Serializers are needed in DRF
-* ModelSerializer
-* SerializerMethodField
-* Using `source`
-* Read-only fields
-* Converting Django models into JSON
-* How serializers work with Class-Based Views
-
 
 ---
 
 ## View Implementation
 
 ```python
-# function based
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def AddMilkCollection(request):
 
-    # Get logged-in porter
     try:
         porter = request.user.porter_profile
     except PorterProfile.DoesNotExist:
@@ -1846,82 +1604,13 @@ def AddMilkCollection(request):
 
 ---
 
-## How the Logic Works
-
-### Step 1: Verify User is a Porter
-
-```python
-porter = request.user.porter_profile
-```
-
-The authenticated user is extracted from the JWT token.
-
-If the user does not have a porter profile:
-
-```python
-return Response(
-    {"error": "Only porters can add milk collections."},
-    status=403
-)
-```
-
----
-
-### Step 2: Find the Farmer
-
-```python
-farmer_code = request.data.get('farmer_code')
-```
-
-The farmer membership number is submitted by the porter.
-
-Example:
-
-```json
-{
-    "farmer_code": "FRM001"
-}
-```
-
-The system searches for the farmer:
-
-```python
-farmer = FarmerProfile.objects.get(
-    membership_number=farmer_code
-)
-```
-
----
-
-### Step 3: Create Milk Collection
-
-```python
-collection = MilkCollection.objects.create(
-    farmer=farmer,
-    porter=porter,
-    liters=request.data.get('liters'),
-    session=request.data.get('session')
-)
-```
-
-A milk collection record is created and linked to:
-
-* The farmer
-* The authenticated porter
-* Quantity of milk
-* Collection session
-
----
-
-## Testing in Insomnia
+## Testing
 
 ### Endpoint
 
 ```http
-POST http://127.0.0.1:8000/api/porters/milk-collections/add/
+POST /api/porters/milk-collections/add/
 ```
-
----
 
 ### Headers
 
@@ -1930,15 +1619,7 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
-Example:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1Ni...
-```
-
----
-
-### Request Body
+### Body
 
 ```json
 {
@@ -1947,8 +1628,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1Ni...
     "session": "EVENING"
 }
 ```
-
----
 
 ### Successful Response
 
@@ -1964,60 +1643,93 @@ Authorization: Bearer eyJhbGciOiJIUzI1Ni...
 
 ---
 
-### Invalid Farmer
+## What Students Learn
 
-Request:
+* Function-Based Views
+* request.user
+* Querying Models
+* Creating Records
+* Returning Responses
+
+---
+
+# Lesson 2: Introducing Serializers
+
+At this point, milk collection records have been stored in the database.
+
+The next step is allowing a porter to retrieve those records.
+
+Before sending model objects as JSON, DRF requires a serializer.
+
+---
+
+## MilkCollectionSerializer
+
+```python
+class MilkCollectionSerializer(serializers.ModelSerializer):
+    farmer_name = serializers.SerializerMethodField()
+
+    farmer_code = serializers.CharField(
+        source='farmer.membership_number',
+        read_only=True
+    )
+
+    class Meta:
+        model = MilkCollection
+        fields = [
+            'id',
+            'farmer_code',
+            'farmer_name',
+            'liters',
+            'session',
+            'total_amount',
+            'collection_date',
+        ]
+
+    def get_farmer_name(self, obj):
+        return f"{obj.farmer.first_name} {obj.farmer.last_name}"
+```
+
+---
+
+## Why Do We Need a Serializer?
+
+Converts:
+
+```python
+MilkCollection Object
+```
+
+into:
 
 ```json
 {
-    "farmer_code": "FRM999",
+    "id": 1,
+    "farmer_code": "FRM001",
+    "farmer_name": "John Kamau",
     "liters": 55,
-    "session": "EVENING"
-}
-```
-
-Response:
-
-```json
-{
-    "error": "Farmer not found."
+    "session": "EVENING",
+    "total_amount": 2750,
+    "collection_date": "2025-07-10"
 }
 ```
 
 ---
 
-### Non-Porter User
+## What Students Learn
 
-If a Farmer or Administrator attempts the request:
-
-```json
-{
-    "error": "Only porters can add milk collections."
-}
-```
+* ModelSerializer
+* SerializerMethodField
+* source=
+* Converting Models to JSON
 
 ---
 
-## Learning Outcome
+# Lesson 3: View My Collections
 
-After completing this example, students should understand:
+Now that a serializer exists, the porter can retrieve all collections they have recorded.
 
-* JWT Authentication
-* Using `request.user`
-* Role-based authorization
-* Querying related models
-* Creating records with Django ORM
-* Returning API responses with Django REST Framework
-* Testing secured APIs using Insomnia
-
-```
-```
-
-# View My Collections
-
-This endpoint allows a porter to view all milk collections that they have personally recorded.
-
-The porter is identified automatically from the JWT token.
+This example introduces Class-Based Views and DRF Generics.
 
 ---
 
@@ -2031,120 +1743,23 @@ class MyCollectionsView(generics.ListAPIView):
     def get_queryset(self):
         porter = self.request.user.porter_profile
 
-        collections = (
+        return (
             MilkCollection.objects
             .filter(porter=porter)
             .select_related('farmer')
             .order_by('-created_at')
         )
-
-        return collections
 ```
 
 ---
 
-## How the Logic Works
-
-### Step 1: Verify User is Authenticated
-
-```python
-permission_classes = [IsAuthenticated]
-```
-
-Only users with a valid JWT access token can access this endpoint.
-
----
-
-### Step 2: Get the Logged-in Porter
-
-```python
-porter = self.request.user.porter_profile
-```
-
-The authenticated user is extracted from the JWT token.
-
-Example:
-
-```text
-Token → User → PorterProfile
-```
-
-The system automatically knows which porter is making the request.
-
-No porter ID is required in the URL or request body.
-
----
-
-### Step 3: Retrieve the Porter's Collections
-
-```python
-MilkCollection.objects.filter(
-    porter=porter
-)
-```
-
-This ensures a porter can only view their own records.
-
-Example:
-
-| Porter | Collections Returned     |
-| ------ | ------------------------ |
-| Peter  | Peter's collections only |
-| James  | James's collections only |
-
----
-
-### Step 4: Load Related Farmer Data
-
-```python
-.select_related('farmer')
-```
-
-This optimizes database queries by loading farmer information together with collection records.
-
-Without this optimization:
-
-```text
-1 query for collections
-+
-many farmer queries
-```
-
-With `select_related()`:
-
-```text
-1 optimized query
-```
-
----
-
-### Step 5: Sort by Latest Records
-
-```python
-.order_by('-created_at')
-```
-
-Collections are displayed from newest to oldest.
-
-Example:
-
-```text
-10:00 PM
-08:00 PM
-06:00 PM
-```
-
----
-
-## Testing in Insomnia
+## Testing
 
 ### Endpoint
 
 ```http
-GET http://127.0.0.1:8000/api/porters/collections/my/
+GET /api/porters/collections/my/
 ```
-
----
 
 ### Headers
 
@@ -2152,114 +1767,42 @@ GET http://127.0.0.1:8000/api/porters/collections/my/
 Authorization: Bearer <access_token>
 ```
 
-Example:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1Ni...
-```
-
 ---
 
-### Request Body
-
-No request body is required.
-
-```http
-GET /api/porters/collections/my/
-```
-
----
-
-## Successful Response
+### Successful Response
 
 ```json
 [
     {
         "id": 12,
-        "farmer": "John Kamau",
-        "liters": "55.00",
+        "farmer_code": "FRM001",
+        "farmer_name": "John Kamau",
+        "liters": 55,
         "session": "EVENING",
-        "total_amount": "2750.00",
-        "created_at": "2025-07-10T18:20:30Z"
-    },
-    {
-        "id": 11,
-        "farmer": "Mary Wanjiru",
-        "liters": "40.00",
-        "session": "MORNING",
-        "total_amount": "2000.00",
-        "created_at": "2025-07-10T08:15:10Z"
+        "total_amount": 2750,
+        "collection_date": "2025-07-10"
     }
 ]
 ```
 
 ---
 
-## What the Response Means
+## What Students Learn
 
-| Field        | Description              |
-| ------------ | ------------------------ |
-| id           | Collection record ID     |
-| farmer       | Farmer who supplied milk |
-| liters       | Quantity collected       |
-| session      | MORNING or EVENING       |
-| total_amount | Calculated payment value |
-| created_at   | Collection timestamp     |
-
----
-
-## Example Scenario
-
-Suppose Porter Peter records the following collections:
-
-| Farmer        | Liters |
-| ------------- | ------ |
-| John Kamau    | 55     |
-| Mary Wanjiru  | 40     |
-| Samuel Kiptoo | 30     |
-
-When Peter sends:
-
-```http
-GET /api/porters/collections/my/
-```
-
-The API returns only Peter's records.
-
-If another porter logs in, they will only see their own collections.
-
-This is possible because:
-
-```python
-.filter(porter=porter)
-```
-
-uses the authenticated user's porter profile.
-
----
-
-## Learning Outcome
-
-After completing this example, students should understand:
-
-* JWT Authentication
-* Class-Based Views (CBVs)
 * ListAPIView
-* QuerySet filtering
-* Using `request.user`
-* One-to-One relationships
-* Database optimization with `select_related`
-* Ordering query results
-* Testing protected endpoints with Insomnia
-* Returning serialized data using Django REST Framework
+* Generic Views
+* QuerySets
+* Filtering
+* select_related()
+* Serializer Integration
 
+---
 
+# Lesson 4: Porter Dashboard
 
-# Porter Dashboard
+After collecting milk and viewing collection history, the porter needs daily performance statistics.
 
-The Porter Dashboard provides a summary of the porter's daily milk collection activities.
-
-Instead of returning individual collection records, this endpoint returns statistics and analytics for the current day.
+This endpoint demonstrates dashboard analytics.
 
 ---
 
@@ -2308,169 +1851,13 @@ def PorterDashboardView(request):
 
 ---
 
-## How the Logic Works
-
-### Step 1: Verify the User is a Porter
-
-```python
-porter = request.user.porter_profile
-```
-
-The authenticated user is retrieved from the JWT token.
-
-If the user is not a porter:
-
-```python
-return Response(
-    {"error": "Only porters can access this dashboard."},
-    status=403
-)
-```
-
----
-
-### Step 2: Get Today's Date
-
-```python
-today = timezone.now().date()
-```
-
-Example:
-
-```text
-2025-07-10
-```
-
-The dashboard only displays statistics for the current day.
-
----
-
-### Step 3: Retrieve Today's Collections
-
-```python
-collections = MilkCollection.objects.filter(
-    porter=porter,
-    collection_date=today
-)
-```
-
-Example:
-
-| Farmer | Liters |
-| ------ | ------ |
-| John   | 55     |
-| Mary   | 40     |
-| Samuel | 30     |
-
-Only records collected today by the logged-in porter are included.
-
----
-
-### Step 4: Calculate Total Liters
-
-```python
-total_liters = collections.aggregate(
-    total=Sum('liters')
-)['total'] or 0
-```
-
-Example:
-
-```text
-55 + 40 + 30 = 125 Liters
-```
-
-Result:
-
-```json
-{
-    "total_liters_today": 125
-}
-```
-
----
-
-### Step 5: Calculate Total Amount
-
-```python
-total_amount = collections.aggregate(
-    total=Sum('total_amount')
-)['total'] or 0
-```
-
-Example:
-
-| Collection | Amount |
-| ---------- | ------ |
-| 2750       | KES    |
-| 2000       | KES    |
-| 1500       | KES    |
-
-Total:
-
-```text
-2750 + 2000 + 1500 = 6250
-```
-
----
-
-### Step 6: Count Total Collections
-
-```python
-total_collections = collections.count()
-```
-
-Example:
-
-```text
-3 collection records
-```
-
-Result:
-
-```json
-{
-    "total_collections_today": 3
-}
-```
-
----
-
-### Step 7: Count Assigned Farmers
-
-```python
-assigned_farmers = porter.assigned_farmers.count()
-```
-
-Example:
-
-If the porter is responsible for:
-
-* John
-* Mary
-* Samuel
-* David
-* Ruth
-
-Result:
-
-```json
-{
-    "assigned_farmers": 5
-}
-```
-
----
-
-## Testing in Insomnia
+## Testing
 
 ### Endpoint
 
 ```http
-GET http://127.0.0.1:8000/api/porters/dashboard/
+GET /api/porters/dashboard/
 ```
-
----
 
 ### Headers
 
@@ -2478,25 +1865,7 @@ GET http://127.0.0.1:8000/api/porters/dashboard/
 Authorization: Bearer <access_token>
 ```
 
-Example:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1Ni...
-```
-
----
-
-### Request Body
-
-No request body is required.
-
-```http
-GET /api/porters/dashboard/
-```
-
----
-
-## Successful Response
+### Successful Response
 
 ```json
 {
@@ -2510,71 +1879,30 @@ GET /api/porters/dashboard/
 
 ---
 
-## Response Fields
+## What Students Learn
 
-| Field                   | Description                         |
-| ----------------------- | ----------------------------------- |
-| date                    | Current date                        |
-| assigned_farmers        | Farmers assigned to the porter      |
-| total_collections_today | Number of collection records today  |
-| total_liters_today      | Total milk collected today          |
-| total_amount_today      | Total value of milk collected today |
-
----
-
-## Example Scenario
-
-Suppose Porter Peter has:
-
-### Assigned Farmers
-
-```text
-25 Farmers
-```
-
-### Today's Collections
-
-| Farmer | Liters | Amount |
-| ------ | ------ | ------ |
-| John   | 55     | 2750   |
-| Mary   | 40     | 2000   |
-| Samuel | 30     | 1500   |
-
-The dashboard will calculate:
-
-```text
-Assigned Farmers = 25
-Collections = 3
-Total Liters = 125
-Total Amount = 6250
-```
-
-Response:
-
-```json
-{
-    "date": "2025-07-10",
-    "assigned_farmers": 25,
-    "total_collections_today": 3,
-    "total_liters_today": 125,
-    "total_amount_today": 6250
-}
-```
+* Aggregations
+* Sum()
+* count()
+* Dashboard APIs
+* Summary Statistics
+* Business Analytics
 
 ---
 
-## Learning Outcome
+# Collector Workflow Summary
 
-After completing this example, students should understand:
-
-* JWT Authentication
-* Role-Based Access Control
-* Filtering QuerySets
-* Django ORM Aggregation
-* Using `Sum()`
-* Using `count()`
-* Building Dashboard Analytics
-* Returning Summary Statistics
-* Testing Protected GET Endpoints with Insomnia
-* Creating Real-World Business Dashboards using Django REST Framework
+```text
+Login
+  ↓
+Add Milk Collection
+  ↓
+Store Data in Database
+  ↓
+Serialize Data
+  ↓
+View My Collections
+  ↓
+Generate Dashboard Analytics
+```
 
