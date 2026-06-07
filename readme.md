@@ -2651,6 +2651,42 @@ Notices are shared across the system.
 GET /api/notices/
 ```
 
+```python
+# farmers notice view
+class FarmerNoticeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        notices = Notice.objects.filter(
+            target__in=['ALL', 'FARMERS']
+        ).order_by('-created_at')
+
+        serializer = NoticeSerializer(notices, many=True)
+
+        return Response(serializer.data)
+```
+
+
+```python
+# potter notices 
+class PorterNoticeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        notices = Notice.objects.filter(
+            target__in=['ALL', 'PORTERS']
+        ).order_by('-created_at')
+
+        serializer = NoticeSerializer(notices, many=True)
+
+        return Response(serializer.data)
+```
+
+
+
+
 ---
 
 ## Response
