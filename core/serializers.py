@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import MilkCollection, Feedback
+from core.models import MilkCollection, Feedback,FarmerProfile, Notice, PorterProfile
 
 # potters serializer for milk collection
 
@@ -76,3 +76,27 @@ class FeedbackSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
+
+
+class FarmerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FarmerProfile
+        fields = '__all__'
+
+
+class PorterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PorterProfile
+        fields = '__all__'
+
+
+
+class NoticeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notice
+        fields = '__all__'
+        read_only_fields = ['created_by']

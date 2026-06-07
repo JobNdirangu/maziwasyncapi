@@ -33,7 +33,7 @@ urlpatterns = [
     path('api/core/', include('core.urls')),
     path('api/farmers/', include('farmer.urls')),
     path('api/porters/', include('collector.urls')),
-    # path('api/cooperative/', include('apps.cooperative.urls')),
+    path('api/cooperative/', include('cooperative.urls')),
 ]
 
 # Serve media files in development

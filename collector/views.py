@@ -1,13 +1,15 @@
-from core.serializers import MilkCollectionSerializer
+from core.serializers import MilkCollectionSerializer, NoticeSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status,generics
+from rest_framework.views import APIView
+
 
 from django.utils import timezone
 from django.db.models import Sum
 
-from core.models import FarmerProfile, PorterProfile, MilkCollection
+from core.models import FarmerProfile, Notice, PorterProfile, MilkCollection
 
 
 @api_view(['GET'])
@@ -108,3 +110,17 @@ class MyCollectionsView(generics.ListAPIView):
         )
 
         return collections
+    
+
+class PorterNoticeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        notices = Notice.objects.filter(
+            target__in=['ALL', 'PORTERS']
+        ).order_by('-created_at')
+
+        serializer = NoticeSerializer(notices, many=True)
+
+        return Response(serializer.data)

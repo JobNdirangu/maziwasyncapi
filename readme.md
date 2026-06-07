@@ -1,6 +1,4 @@
-Here's the immediate copy-paste for your README.md file:
 
-```markdown
 # MaziwaSync
 
 ## Project Overview
@@ -13,7 +11,6 @@ Traditionally, many dairy cooperatives rely on manual records, paper-based track
 
 The platform supports multiple user roles, including administrators, milk porters, and farmers, each with role-specific dashboards and functionalities.
 
----
 
 # Core Features
 
@@ -28,7 +25,6 @@ The platform supports multiple user roles, including administrators, milk porter
 * Payment tracking and future Mpesa B2C integration
 * Reporting and operational insights
 
----
 
 # User Roles
 
@@ -43,7 +39,6 @@ Administrators oversee the entire cooperative system. They can:
 * Track analytics and reports
 * Monitor payment estimations
 
----
 
 ## Porter / Milk Collector
 
@@ -54,7 +49,7 @@ Porters are responsible for collecting milk from farmers and recording:
 * Collection session (morning/evening)
 * Date and time of collection
 
----
+
 
 ## Farmer
 
@@ -67,7 +62,7 @@ Farmers can:
 * Monitor complaint resolution status
 * View supply analytics and trends
 
----
+
 
 # Objectives
 
@@ -75,7 +70,7 @@ The main objective of MaziwaSync is to modernize cooperative operations by provi
 
 The system also seeks to improve farmer engagement, operational monitoring, communication, and decision-making through centralized data management and analytics.
 
----
+
 
 # Technology Stack
 
@@ -89,7 +84,7 @@ The system also seeks to improve farmer engagement, operational monitoring, comm
   * Mpesa Daraja API
   * AI Sentiment Analysis
 
----
+
 
 # Software Development Methodology
 
@@ -97,7 +92,7 @@ The project follows an Agile Software Development Lifecycle (SDLC) approach to s
 
 Development will be carried out in iterative phases (sprints), allowing gradual implementation of features such as authentication, milk collection management, dashboards, analytics, complaints management, and payment integration.
 
----
+
 
 # Future Enhancements
 
@@ -108,7 +103,7 @@ Development will be carried out in iterative phases (sprints), allowing gradual 
 * Multi-cooperative support
 * Mobile application integration
 
----
+
 
 # System Architecture and Application Design
 

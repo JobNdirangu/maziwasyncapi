@@ -121,7 +121,7 @@ def LogoutView(request):
         return Response({"message": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
     except TokenError:
         return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
+    except Exception as e: 
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     
