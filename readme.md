@@ -2384,17 +2384,426 @@ Admin Dashboard Analytics
 
 
 
+# Cooperative (Admin) Module
 
+The Cooperative module is responsible for managing the entire dairy system.
+It provides administrative control over farmers, porters, milk collections, notices, and system-wide analytics.
+
+---
+
+# Learning Objectives
+
+After completing this module, students should understand:
+
+* Django REST Framework ViewSets
+* ModelSerializer usage in real systems
+* Role-Based Access Control (Admin Only)
+* CRUD operations at scale
+* Query optimization using select_related()
+* System-wide analytics and dashboards
+* Data aggregation using Sum() and count()
+* Real-world cooperative management systems
+
+---
+
+# Lesson 1: Serializers (Foundation Layer)
+
+Before building APIs, we define serializers to convert Django models into JSON.
+
+---
+
+## FarmerSerializer
+
+```python
+class FarmerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FarmerProfile
+        fields = '__all__'
+```
+
+---
+
+## PorterSerializer
+
+```python
+class PorterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PorterProfile
+        fields = '__all__'
+```
+
+---
+
+## NoticeSerializer
+
+```python
+class NoticeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notice
+        fields = '__all__'
+        read_only_fields = ['created_by']
+```
+
+---
+
+## Why Serializers Matter
+
+They convert Django models into JSON:
+
+```json
+{
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Kamau"
+}
+```
+
+Without serializers, API responses cannot be structured properly.
+
+---
+
+# Lesson 2: Manage Farmers (CRUD)
+
+Administrators manage farmer accounts.
+
+## ViewSet
+
+```python
+class FarmerViewSet(viewsets.ModelViewSet):
+
+    queryset = FarmerProfile.objects.all()
+    serializer_class = FarmerSerializer
+    permission_classes = [IsAdminUser]
+```
+
+---
+
+## Features
+
+* Create farmers
+* View farmers
+* Update farmer details
+* Delete farmers
+
+---
+
+## Example Endpoint
+
+```http
+GET /api/admin/farmers/
+```
+
+---
+
+## Learning Outcome
+
+* ModelViewSet
+* CRUD operations
+* Admin-only permissions
+
+---
+
+# Lesson 3: Manage Porters (Collectors)
+
+Administrators manage milk collectors.
+
+## ViewSet
+
+```python
+class PorterViewSet(viewsets.ModelViewSet):
+
+    queryset = PorterProfile.objects.all()
+    serializer_class = PorterSerializer
+    permission_classes = [IsAdminUser]
+```
+
+---
+
+## Example Response
+
+```json
+[
+    {
+        "id": 1,
+        "employee_id": "EMP001",
+        "first_name": "Peter",
+        "last_name": "Mwangi"
+    }
+]
+```
+
+---
+
+## Learning Outcome
+
+* Role management
+* User separation
+* CRUD operations
+
+---
+
+# Lesson 4: Manage Milk Collections
+
+Administrators can view and manage all milk collection records.
+
+## ViewSet
+
+```python
+class MilkCollectionViewSet(viewsets.ModelViewSet):
+
+    queryset = MilkCollection.objects.select_related(
+        'farmer',
+        'porter'
+    )
+
+    serializer_class = MilkCollectionSerializer
+    permission_classes = [IsAdminUser]
+```
+
+---
+
+## Why select_related()?
+
+Optimizes database queries by joining related tables.
+
+Without it:
+
+* Multiple database hits
+
+With it:
+
+* Single optimized query
+
+---
+
+## Learning Outcome
+
+* Query optimization
+* Foreign key relationships
+* Data inspection
+
+---
+
+# Lesson 5: Manage Notices (Announcements)
+
+Administrators publish notices for farmers and porters.
+
+Examples:
+
+* Milk price updates
+* System maintenance
+* Payment announcements
+
+---
+
+## ViewSet
+
+```python
+class NoticeViewSet(viewsets.ModelViewSet):
+
+    queryset = Notice.objects.all()
+    serializer_class = NoticeSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+```
+
+---
+
+## Create Notice
+
+### Request
+
+```http
+POST /api/admin/notices/
+```
+
+### Body
+
+```json
+{
+    "title": "Milk Price Update",
+    "message": "Milk price increased to KES 55 per litre."
+}
+```
+
+---
+
+## Learning Outcome
+
+* perform_create()
+* Auto field assignment
+* System announcements
+
+---
+
+# Lesson 6: Farmers & Porters View Notices
+
+Notices are shared across the system.
+
+## Endpoint
+
+```http
+GET /api/notices/
+```
+
+---
+
+## Response
+
+```json
+[
+    {
+        "id": 1,
+        "title": "Milk Price Update",
+        "message": "Milk price increased to KES 55 per litre."
+    }
+]
+```
+
+---
+
+## Learning Outcome
+
+* Shared data access
+* Read-only APIs
+* ListAPIView usage
+
+---
+
+# Lesson 7: Admin Dashboard (Analytics)
+
+The dashboard provides full cooperative insights.
+
+---
+
+## Key Metrics
+
+### User Statistics
+
+* Total farmers
+* Total porters
+
+### Milk Analytics
+
+* Total liters
+* Daily / weekly / monthly production
+
+### Revenue Analytics
+
+* Total revenue
+* Daily revenue
+* Monthly revenue
+
+### Feedback Analytics
+
+* Pending feedback
+* Resolved feedback
+
+### Performance Data
+
+* Top farmers
+* Recent collections
+
+---
+
+## View Implementation
+
+```python
+class AdminDashboardView(APIView):
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+
+        today = timezone.localdate()
+        week_start = today - timedelta(days=7)
+
+        total_farmers = FarmerProfile.objects.count()
+        total_porters = PorterProfile.objects.count()
+
+        collections = MilkCollection.objects.all()
+
+        total_liters = collections.aggregate(Sum('liters'))['total'] or 0
+        today_liters = collections.filter(collection_date=today).aggregate(Sum('liters'))['total'] or 0
+        weekly_liters = collections.filter(collection_date__gte=week_start).aggregate(Sum('liters'))['total'] or 0
+        monthly_liters = collections.filter(
+            collection_date__year=today.year,
+            collection_date__month=today.month
+        ).aggregate(Sum('liters'))['total'] or 0
+
+        total_revenue = collections.aggregate(Sum('total_amount'))['total'] or 0
+        today_revenue = collections.filter(collection_date=today).aggregate(Sum('total_amount'))['total'] or 0
+        weekly_revenue = collections.filter(collection_date__gte=week_start).aggregate(Sum('total_amount'))['total'] or 0
+        monthly_revenue = collections.filter(
+            collection_date__year=today.year,
+            collection_date__month=today.month
+        ).aggregate(Sum('total_amount'))['total'] or 0
+
+        pending_feedback = Feedback.objects.filter(status='PENDING').count()
+        resolved_feedback = Feedback.objects.filter(status='RESOLVED').count()
+
+        top_farmers = FarmerProfile.objects.order_by('-total_milk_delivered')[:5]
+        top_farmers_data = FarmerSerializer(top_farmers, many=True).data
+
+        recent_collections = MilkCollection.objects.select_related('farmer', 'porter').order_by('-created_at')[:10]
+        recent_collections_data = MilkCollectionSerializer(recent_collections, many=True).data
+
+        return Response({
+
+            "farmers": total_farmers,
+            "porters": total_porters,
+
+            "total_liters": total_liters,
+            "today_liters": today_liters,
+            "weekly_liters": weekly_liters,
+            "monthly_liters": monthly_liters,
+
+            "total_revenue": total_revenue,
+            "today_revenue": today_revenue,
+            "weekly_revenue": weekly_revenue,
+            "monthly_revenue": monthly_revenue,
+
+            "pending_feedback": pending_feedback,
+            "resolved_feedback": resolved_feedback,
+
+            "top_farmers": top_farmers_data,
+            "recent_collections": recent_collections_data
+        })
+```
+
+---
+
+## Learning Outcome
+
+Students learn:
+
+* APIView
+* Aggregations (Sum, Count)
+* Dashboard design
+* Business intelligence
+* Data serialization
+* Performance optimization
+
+---
+
+# Cooperative Workflow Summary
+
+```text
 Admin Login
-      ↓
+   ↓
 Manage Farmers
-      ↓
+   ↓
 Manage Porters
-      ↓
+   ↓
 Manage Milk Collections
-      ↓
-Manage Notices
-      ↓
-Farmers & Porters View Notices
-      ↓
-Admin Dashboard Analytics
+   ↓
+Publish Notices
+   ↓
+Monitor Analytics Dashboard
+```
+
