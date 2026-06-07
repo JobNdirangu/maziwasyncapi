@@ -50,7 +50,6 @@ INSTALLED_APPS = [
 
     # Local Apps
     'core',
-    'accounts',
     'cooperative',
     'collector',
     'farmer',

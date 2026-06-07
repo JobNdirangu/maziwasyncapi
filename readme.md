@@ -11,6 +11,7 @@ Traditionally, many dairy cooperatives rely on manual records, paper-based track
 
 The platform supports multiple user roles, including administrators, milk porters, and farmers, each with role-specific dashboards and functionalities.
 
+---
 
 # Core Features
 
@@ -25,6 +26,7 @@ The platform supports multiple user roles, including administrators, milk porter
 * Payment tracking and future Mpesa B2C integration
 * Reporting and operational insights
 
+---
 
 # User Roles
 
@@ -39,6 +41,7 @@ Administrators oversee the entire cooperative system. They can:
 * Track analytics and reports
 * Monitor payment estimations
 
+---
 
 ## Porter / Milk Collector
 
@@ -49,7 +52,7 @@ Porters are responsible for collecting milk from farmers and recording:
 * Collection session (morning/evening)
 * Date and time of collection
 
-
+---
 
 ## Farmer
 
@@ -62,7 +65,7 @@ Farmers can:
 * Monitor complaint resolution status
 * View supply analytics and trends
 
-
+---
 
 # Objectives
 
@@ -70,7 +73,7 @@ The main objective of MaziwaSync is to modernize cooperative operations by provi
 
 The system also seeks to improve farmer engagement, operational monitoring, communication, and decision-making through centralized data management and analytics.
 
-
+---
 
 # Technology Stack
 
@@ -84,7 +87,7 @@ The system also seeks to improve farmer engagement, operational monitoring, comm
   * Mpesa Daraja API
   * AI Sentiment Analysis
 
-
+---
 
 # Software Development Methodology
 
@@ -92,7 +95,7 @@ The project follows an Agile Software Development Lifecycle (SDLC) approach to s
 
 Development will be carried out in iterative phases (sprints), allowing gradual implementation of features such as authentication, milk collection management, dashboards, analytics, complaints management, and payment integration.
 
-
+---
 
 # Future Enhancements
 
@@ -103,7 +106,7 @@ Development will be carried out in iterative phases (sprints), allowing gradual 
 * Multi-cooperative support
 * Mobile application integration
 
-
+---
 
 # System Architecture and Application Design
 
@@ -186,22 +189,31 @@ The project uses five main Django applications.
 
 # 1. Core Application
 
+
 ## Responsibilities
 
 The core application handles:
 
-* Custom user model
-* Base model abstractions
-* System-wide shared models
-* Common utilities and mixins
+* Custom User model
+* Authentication
+* JWT Authentication
+* Registration
+* Authorization & Permissions
+* User Roles
+* User Profiles
+* Base Models
+* Shared Utilities
+* Shared Mixins
+
+Supported Roles
+* Administrator
+* Farmer
+* Porter / Milk Collector
 
 ## Engineering Reasoning
 
 A dedicated core app provides:
-- Cleaner separation of authentication logic from user management
-- Better reusability across the entire system
-- Prevention of circular import issues
-- A single source of truth for the base user model
+- The Core application contains all system-wide functionality required by every other module. Since authentication, authorization, user management, and role handling are foundational concerns used throughout the system, keeping them together with the custom User model provides a single source of truth and reduces unnecessary application fragmentation.
 
 ---
 
