@@ -477,7 +477,7 @@ DB_PORT=3306
 ---
 You're absolutely right! Here's the corrected `core/models.py` section for your README.md that matches YOUR actual implementation:
 
-```markdown
+
 ## Step 7: Create Models in Core Application
 
 In `core/models.py`:
@@ -503,6 +503,7 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+
 # ============================================================
 # BASE ABSTRACT MODEL
 # ============================================================
@@ -514,7 +515,6 @@ class BaseModel(models.Model):
     
     class Meta:
         abstract = True
-
 
 
 # ============================================================
@@ -647,10 +647,10 @@ class MilkCollection(BaseModel):
 
 
 # ============================================================
-# COMPLAINT
+# FEEDBACK
 # ============================================================
 
-class Complaint(BaseModel):
+class Feedback(BaseModel):
     """Farmer complaints tracking"""
     
     STATUS_CHOICES = [
@@ -662,7 +662,7 @@ class Complaint(BaseModel):
     farmer = models.ForeignKey(
         FarmerProfile, 
         on_delete=models.CASCADE, 
-        related_name='complaints'
+        related_name='feedbacks'
     )
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -731,8 +731,7 @@ class Payment(BaseModel):
     payment_date = models.DateTimeField()
     
     def __str__(self):
-        return f"{self.transaction_ref} - KES {self.amount}"
-```
+        return f"{self.transaction_ref} - KES {self.amount}" ```
 
 ---
 
