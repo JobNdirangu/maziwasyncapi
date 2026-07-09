@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-$xo1bjh(!&%v9+h-*q)str4*sml3ks)gd7jrxi)-!(1x=0o*se
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'f0f1-102-204-88-102.ngrok-free.app',
+    'a8b4-102-0-16-40.ngrok-free.app',
     '127.0.0.1',
     'localhost'
 ]
@@ -180,7 +180,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://f0f1-102-204-88-102.ngrok-free.app"
+    "https://a8b4-102-0-16-40.ngrok-free.app"
 ]
 
 # STATIC & MEDIA FILES

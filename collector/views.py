@@ -85,9 +85,7 @@ def AddMilkCollection(request):
             {"error": "Only porters can add milk collections."},
             status=status.HTTP_403_FORBIDDEN
         )
-
     farmer_code = request.data.get('farmer_code')
-
     try:
         farmer = FarmerProfile.objects.get(
             membership_number=farmer_code
@@ -97,7 +95,6 @@ def AddMilkCollection(request):
             {"error": "Farmer not found."},
             status=status.HTTP_404_NOT_FOUND
         )
-
     collection = MilkCollection.objects.create(
         farmer=farmer,
         porter=porter,
@@ -137,6 +134,7 @@ class PorterNoticeView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+
         return (
             Notice.objects
             .filter(target__in=['ALL', 'PORTERS'])

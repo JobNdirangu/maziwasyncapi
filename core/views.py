@@ -9,7 +9,6 @@ from rest_framework import status
 
 from .models import User, FarmerProfile, PorterProfile
 
-
 # ============================================================
 # REGISTER
 # ============================================================
@@ -78,7 +77,6 @@ def RegisterView(request):
         return Response({"error": "Integrity error: " + str(e)}, status=400)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
-
 
 
 # ============================================================

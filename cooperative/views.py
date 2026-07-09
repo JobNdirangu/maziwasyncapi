@@ -266,7 +266,7 @@ def farmers_with_balance(request):
             data.append({
                 "farmer_id": farmer.id,
                 "farmer": farmer.first_name,
-                "phone": farmer.mpesa_number,
+                "phone": farmer.phone_number,
                 "earned": earned,
                 "paid": paid,
                 "balance": balance
@@ -285,6 +285,7 @@ def pay_farmer(request):
     amount = request.data["amount"]
 
     farmer = FarmerProfile.objects.get(id=farmer_id)
+    print(farmer)
     earned = MilkCollection.objects.filter(farmer=farmer).aggregate(total=Sum('total_amount'))['total'] or 0
     paid = Payment.objects.filter(farmer=farmer, status="COMPLETED").aggregate(total=Sum('amount'))['total'] or 0
     balance = earned - paid
