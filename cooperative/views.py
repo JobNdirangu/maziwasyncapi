@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db.models import Sum
 
 from cooperative.services import MpesaPayment
-from core.serializers import FarmerSerializer, MilkCollectionSerializer, NoticeSerializer, PorterSerializer
+from core.serializers import FarmerSerializer, MilkCollectionSerializer, NoticeSerializer, PaymentSerializer, PorterSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -280,3 +280,22 @@ def mpesa_callback(request):
         payment.status="FAILED"
     payment.save()
     return Response({ "received":True })
+
+
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def PaymentTest(request):
+#     payments=Payment.objects.all()
+#     paymentdata=PaymentSerializer(
+#         payments,
+#         many=True
+#     ).data
+#     return Response(paymentdata)
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    permission_classes=[IsAdminUser]
+    serializer_class=PaymentSerializer
+    model=Payment
+    queryset=Payment.objects.all()
+    http_method_names=['get']

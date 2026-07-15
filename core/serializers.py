@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import MilkCollection, Feedback,FarmerProfile, Notice, PorterProfile
+from core.models import MilkCollection, Feedback,FarmerProfile, Notice, Payment, PorterProfile
 
 # potters serializer for milk collection
 
@@ -119,3 +119,9 @@ class RecentCollectionSerializer(serializers.ModelSerializer):
 
     def get_farmer_name(self, obj):
         return f"{obj.farmer.first_name} {obj.farmer.last_name}"
+    
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Payment
+        fields='__all__'

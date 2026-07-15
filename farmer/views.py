@@ -136,8 +136,8 @@ class FarmerNoticeView(generics.ListAPIView):
         return notices
     
 
-# Instantiate the object once globally when the server boots up
 
+# Instantiate the object once globally when the server boots up
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def predict_disease_view(request):
