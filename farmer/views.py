@@ -1,6 +1,7 @@
 from datetime import date
 from django.utils import timezone
 from django.db.models import Sum
+from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,9 +12,7 @@ from rest_framework import generics
 
 from rest_framework.exceptions import PermissionDenied
 
-
 from core.models import (FarmerProfile, MilkCollection,Feedback, Notice)
-
 from core.serializers import (MilkCollectionSerializer,FeedbackSerializer, NoticeSerializer)
 from farmer.services import CattleAIService
 
@@ -135,7 +134,6 @@ class FarmerNoticeView(generics.ListAPIView):
             .order_by('-created_at')
         )
         return notices
-
     
 
 # Instantiate the object once globally when the server boots up

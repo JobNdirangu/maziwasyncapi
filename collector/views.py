@@ -128,15 +128,14 @@ class MyCollectionsView(generics.ListAPIView):
         )
         return collections
     
-
 class PorterNoticeView(generics.ListAPIView):
     serializer_class = NoticeSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
-        return (
+        notices=( 
             Notice.objects
             .filter(target__in=['ALL', 'PORTERS'])
             .order_by('-created_at')
         )
+        return notices

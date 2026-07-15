@@ -36,89 +36,48 @@ class AdminDashboardView(APIView):
 
         # Total registered farmers in the cooperative
         total_farmers = FarmerProfile.objects.count()
-
         # Total registered milk collectors/porters
         total_porters = PorterProfile.objects.count()
-
         # ==================================================
         # MILK COLLECTION STATISTICS
         # ==================================================
-
         # Retrieve all milk collection records
         # Reusing this queryset avoids repeating queries
         collections = MilkCollection.objects.all()
-
         # Total liters collected since the system started
-        total_liters = collections.aggregate(
-            total=Sum('liters')
-        )['total'] or 0
-
+        total_liters = collections.aggregate(total=Sum('liters'))['total'] or 0
         # Total liters collected today only
-        today_liters = collections.filter(
-            collection_date=today
-        ).aggregate(
-            total=Sum('liters')
-        )['total'] or 0
-
+        today_liters = collections.filter(collection_date=today).aggregate( total=Sum('liters'))['total'] or 0
         # Total liters collected during the last 7 days
-        weekly_liters = collections.filter(
-            collection_date__gte=week_start
-        ).aggregate(
-            total=Sum('liters')
-        )['total'] or 0
-
+        weekly_liters = collections.filter(collection_date__gte=week_start).aggregate(total=Sum('liters'))['total'] or 0
         # Total liters collected during the current month
-        monthly_liters = collections.filter(
-            collection_date__year=today.year,
-            collection_date__month=today.month
-        ).aggregate(
-            total=Sum('liters')
-        )['total'] or 0
+        monthly_liters = collections.filter( collection_date__year=today.year,collection_date__month=today.month).aggregate(total=Sum('liters'))['total'] or 0
 
         # ==================================================
         # REVENUE STATISTICS
         # ==================================================
 
         # Total money generated from all milk collections
-        total_revenue = collections.aggregate(
-            total=Sum('total_amount')
-        )['total'] or 0
+        total_revenue = collections.aggregate(total=Sum('total_amount'))['total'] or 0
 
         # Revenue generated today
-        today_revenue = collections.filter(
-            collection_date=today
-        ).aggregate(
-            total=Sum('total_amount')
-        )['total'] or 0
+        today_revenue = collections.filter( collection_date=today ).aggregate(total=Sum('total_amount') )['total'] or 0
 
         # Revenue generated in the last 7 days
-        weekly_revenue = collections.filter(
-            collection_date__gte=week_start
-        ).aggregate(
-            total=Sum('total_amount')
-        )['total'] or 0
+        weekly_revenue = collections.filter(collection_date__gte=week_start).aggregate( total=Sum('total_amount'))['total'] or 0
 
         # Revenue generated in the current month
-        monthly_revenue = collections.filter(
-            collection_date__year=today.year,
-            collection_date__month=today.month
-        ).aggregate(
-            total=Sum('total_amount')
-        )['total'] or 0
+        monthly_revenue = collections.filter( collection_date__year=today.year,collection_date__month=today.month ).aggregate( total=Sum('total_amount') )['total'] or 0
 
         # ==================================================
         # FEEDBACK ANALYTICS
         # ==================================================
 
         # Number of complaints/feedback not yet resolved
-        pending_feedback = Feedback.objects.filter(
-            status='PENDING'
-        ).count()
+        pending_feedback = Feedback.objects.filter(status='PENDING' ).count()
 
         # Number of complaints already resolved
-        resolved_feedback = Feedback.objects.filter(
-            status='RESOLVED'
-        ).count()
+        resolved_feedback = Feedback.objects.filter(status='RESOLVED').count()
 
         # ==================================================
         # TOP FARMERS
@@ -237,11 +196,8 @@ class NoticeViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def farmers_with_balance(request):
-
     farmers = FarmerProfile.objects.all()
-
     data = []
-
     for farmer in farmers:
         earned = MilkCollection.objects.filter(
             farmer=farmer
@@ -249,18 +205,13 @@ def farmers_with_balance(request):
             total=Sum('total_amount')
         )['total'] or 0
 
-
         paid = Payment.objects.filter(
             farmer=farmer,
             status="COMPLETED"
         ).aggregate(
             total=Sum('amount')
         )['total'] or 0
-
-
         balance = earned - paid
-
-
         if balance > 0:
 
             data.append({
@@ -271,8 +222,6 @@ def farmers_with_balance(request):
                 "paid": paid,
                 "balance": balance
             })
-
-
     return Response(data)
 
 
@@ -281,8 +230,8 @@ def farmers_with_balance(request):
 @permission_classes([IsAdminUser])
 def pay_farmer(request):
     # Dispatches M-Pesa request and stores payment tracking metadata with a PENDING state
-    farmer_id=request.data["farmer_id"]
-    amount = request.data["amount"]
+    farmer_id=request.data.get("farmer_id")
+    amount = request.data.get("amount")
 
     farmer = FarmerProfile.objects.get(id=farmer_id)
     print(farmer)

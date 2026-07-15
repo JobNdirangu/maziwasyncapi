@@ -19,7 +19,7 @@ class MpesaPayment:
         self.payment_url = "https://sandbox.safaricom.co.ke/mpesa/b2b/v1/paymentrequest"
 
         # Public HTTPS endpoint where Safaricom sends transaction results (Generated via ngrok)
-        self.callback_url = "https://a8b4-102-0-16-40.ngrok-free.app/api/cooperative/callback"
+        self.callback_url = "https://test/api/cooperative/callback"
 
     def get_token(self):
         # Requests an OAuth2 temporary access token from Safaricom
@@ -62,103 +62,5 @@ class MpesaPayment:
         # Give Django the Safaricom response
         return response.json()
     
-
-
-
-# # Prediction codeimport os
-# import json
-# import joblib
-# from groq import Groq
-
-# class CattleAIService:
-#     def __init__(self):
-#         # Locate files in the same directory as this file
-#         base_dir = os.path.dirname(os.path.abspath(__file__))
-        
-#         # Load your ML assets
-#         self.model = joblib.load(os.path.join(base_dir, 'cattle_disease_model.pkl'))
-#         self.model_features = joblib.load(os.path.join(base_dir, 'model_features.pkl'))
-        
-#         # Clean symptom features list
-#         self.valid_symptoms = [
-#             f for f in self.model_features 
-#             if f not in ['Age', 'Temperature'] and not f.startswith('Animal_')
-#         ]
-        
-#         # Setup Groq Client
-#         self.groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-#     def extract_symptoms_with_groq(self, farmer_text):
-#         system_prompt = f"""
-#         You are a veterinary assistant. Analyze the text and extract symptoms matching exactly this list:
-#         {self.valid_symptoms}
-#         Respond with a JSON object: {{"symptoms": ["symptom_name"]}}
-#         """
-#         try:
-#             completion = self.groq_client.chat.completions.create(
-#                 messages=[
-#                     {"role": "system", "content": system_prompt},
-#                     {"role": "user", "content": f"Farmer text: \"{farmer_text}\""}
-#                 ],
-#                 model="llama-3.1-8b-instant",
-#                 temperature=0.0,
-#                 response_format={"type": "json_object"} 
-#             )
-#             result_json = json.loads(completion.choices.message.content)
-#             return result_json.get("symptoms", [])
-#         except Exception:
-#             return []
-
-#     def get_treatment_recommendation(self, disease, animal_type):
-#         system_prompt = (
-#             "You are an expert livestock veterinarian. Provide clear, concise, and professional "
-#             "treatment recommendations under 120 words using short bullet points. Include a vet disclaimer."
-#         )
-#         try:
-#             completion = self.groq_client.chat.completions.create(
-#                 messages=[
-#                     {"role": "system", "content": system_prompt},
-#                     {"role": "user", "content": f"Treatment recommendations for a {animal_type} with {disease}."}
-#                 ],
-#                 model="llama-3.1-8b-instant",
-#                 temperature=0.3
-#             )
-#             return completion.choices.message.content.strip()
-#         except Exception:
-#             return "Treatment recommendation temporarily unavailable. Please consult your local veterinarian immediately."
-
-#     def predict(self, animal_type, age, temp, description):
-#         # 1. AI Symptom Extraction
-#         extracted_symptoms = self.extract_symptoms_with_groq(description)
-        
-#         # 2. Prepare ML Feature Vector Map
-#         input_data = {feature: 0 for feature in self.model_features}
-#         input_data['Age'] = age
-#         input_data['Temperature'] = temp
-        
-#         # Map One-Hot encoded animal key
-#         animal_key = f"Animal_{str(animal_type).strip().lower()}"
-#         if animal_key in input_data:
-#             input_data[animal_key] = 1
-            
-#         # Map extracted symptoms
-#         for symptom in extracted_symptoms:
-#             if symptom in input_data:
-#                 input_data[symptom] = 1
-
-#         # 3. Predict using ML Model
-#         final_input_vector = [input_data[feature] for feature in self.model_features]
-#         prediction = self.model.predict([final_input_vector])
-#         predicted_disease = prediction[0]
-        
-#         # 4. Generate AI Treatment Recommendation
-#         treatment_plan = self.get_treatment_recommendation(predicted_disease, animal_type)
-        
-#         return {
-#             'status': 'success', 
-#             'extracted_symptoms_by_ai': extracted_symptoms,
-#             'predicted_disease': predicted_disease,
-#             'treatment_recommendation': treatment_plan
-#         }
 
 
