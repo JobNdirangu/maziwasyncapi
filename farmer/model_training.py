@@ -290,6 +290,36 @@ joblib.dump(
 
 print("Model saved successfully.")
 
+y_pred=model.predict(y_test)
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+accuracy = accuracy_score(
+    y_test,
+    y_pred
+)
+
+print("Accuracy:", accuracy)
+
+
+# classfication report
+print(
+    classification_report(
+        y_test,
+        y_pred
+    )
+)
+
+# confussion matrixs
+cm = confusion_matrix(
+    y_test,
+    y_pred
+)
+
+print(cm)
+
 
 # =====================================================
 # FINAL MESSAGE
